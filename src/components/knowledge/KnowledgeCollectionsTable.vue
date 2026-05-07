@@ -85,6 +85,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { TARGET_LANGUAGES } from "@/constants/app";
+import { getCollectionType } from "@/utils/qdrant";
 import CollectionTypeTag from "./CollectionTypeTag.vue";
 
 interface Collection {
@@ -141,7 +142,32 @@ const filteredCollections = computed(() => {
 		);
 	}
 
-	return result;
+	// Sort: by language group, then by type (glossary > example > client), then by name
+	const typeOrder: Record<string, number> = {
+		glossary: 0,
+		example: 1,
+		client: 2,
+		unknown: 3,
+	};
+
+	return [...result].sort((a, b) => {
+		// Extract language from name (after last underscore)
+		const langA = a.name.split("_").pop() || "";
+		const langB = b.name.split("_").pop() || "";
+
+		// Primary: language
+		if (langA !== langB) {
+			return langA.localeCompare(langB);
+		}
+
+		// Secondary: type
+		const typeA = typeOrder[getCollectionType(a.name)] ?? 99;
+		const typeB = typeOrder[getCollectionType(b.name)] ?? 99;
+		if (typeA !== typeB) return typeA - typeB;
+
+		// Tertiary: by name
+		return a.name.localeCompare(b.name);
+	});
 });
 </script>
 
