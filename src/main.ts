@@ -6,6 +6,7 @@ import Aura from '@primevue/themes/aura';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import './assets/main.css';
+import './styles/primevue-overrides.scss';
 import App from './App.vue'
 import router from './router'
 import { setupGuards } from './router/guards'

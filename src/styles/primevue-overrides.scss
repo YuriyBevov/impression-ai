@@ -1,0 +1,59 @@
+// PrimeVue component overrides
+
+.p-toolbar {
+	border-radius: 0 !important;
+}
+
+.p-paginator-current {
+	margin: 0 8px;
+}
+
+.p-datatable {
+	&-paginator-bottom {
+		border: none !important;
+		box-shadow: none !important;
+		margin-top: 12px;
+	}
+
+	&-table-container {
+		border-radius: var(--border-radius, 6px) !important;
+	}
+
+	&-header-cell {
+		background: var(--p-datatable-row-striped-background) !important;
+		color: #ffffff !important;
+		cursor: pointer !important;
+		border: none !important;
+		border-block-end: none !important;
+
+		&:hover {
+			background: var(
+				--p-datatable-row-hover-background,
+				rgba(255, 255, 255, 0.1)
+			) !important;
+		}
+	}
+
+	&-column-sorted {
+		background: transparent !important;
+		color: #ffffff !important;
+
+		&:hover {
+			background: var(
+				--p-datatable-row-hover-background,
+				rgba(255, 255, 255, 0.1)
+			) !important;
+		}
+	}
+
+	&-tbody {
+		> tr {
+			border-bottom: none !important;
+
+			> td {
+				border: none !important;
+				border-block-end: none !important;
+			}
+		}
+	}
+}
