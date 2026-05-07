@@ -25,14 +25,11 @@ app.post('/webhook/auth/login', (req, res) => {
   if (username === 'admin' && password === 'admin') {
     const token = 'impression-admin-token-' + Date.now();
     return res.json({
-      success: true,
-      data: {
-        token,
-        user: {
-          id: 1,
-          username: 'admin',
-          name: 'Администратор'
-        }
+      token,
+      user: {
+        id: '1',
+        username: 'admin',
+        role: 'admin'
       }
     });
   }
