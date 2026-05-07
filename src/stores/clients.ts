@@ -31,8 +31,9 @@ export const useClientsStore = defineStore('clients', () => {
     error.value = null;
     try {
       const clients = await clientsService.fetchAll();
-      items.value = clients;
-      activeItems.value = clients.filter(client => client.status === 'active');
+      const arr = Array.isArray(clients) ? clients : [];
+      items.value = arr;
+      activeItems.value = arr.filter(client => client.status === 'active');
     } catch (err: any) {
       error.value = err.message || 'Ошибка загрузки клиентов';
     } finally {

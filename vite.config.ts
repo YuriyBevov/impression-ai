@@ -18,18 +18,13 @@ export default defineConfig({
         rewrite: (path) => path.replace('/api/n8n/webhook/auth', '/webhook/auth'),
         changeOrigin: true
       },
-      '/api/n8n/webhook/auth': {
-        target: 'http://127.0.0.1:3001',
-        rewrite: (path) => path.replace('/api/n8n/webhook/auth', '/webhook/auth'),
-        changeOrigin: true
-      },
-      '/api/n8n': {
-        target: 'https://n8n.yuriybevov.ru',
-        changeOrigin: true
-      },
       '/api/qdrant': {
         target: 'http://185.207.0.152:6333',
         rewrite: (path) => path.replace('/api/qdrant', '/'),
+        changeOrigin: true
+      },
+      '/api': {
+        target: 'https://impression.yuriybevov.ru',
         changeOrigin: true
       }
     },
