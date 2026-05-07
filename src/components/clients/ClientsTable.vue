@@ -106,6 +106,7 @@
 import { reactive, computed } from 'vue';
 import type { Client, ClientStatus } from '@/types/client';
 import { CLIENT_STATUSES } from '@/constants/app';
+import ClientStatusTag from '@/components/clients/ClientStatusTag.vue';
 
 interface Props {
   clients: Client[];
