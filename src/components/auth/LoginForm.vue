@@ -25,6 +25,7 @@
               placeholder="Введите пароль" 
               :feedback="false"
               toggleMask
+              input-autocomplete="current-password"
               :class="{ 'p-invalid': errors.password }"
               class="w-full"
             />

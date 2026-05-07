@@ -86,8 +86,6 @@ app.component('ProgressSpinner', ProgressSpinner);
 app.component('Chip', Chip);
 
 // Register services
-app.use(ConfirmationService);
-app.use(ToastService);
 
 // Register directive
 app.directive('tooltip', Tooltip);
