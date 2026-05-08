@@ -1,0 +1,16 @@
+[Unit]
+Description=Qdrant Mock Server for Impression
+After=network.target
+
+[Service]
+Type=simple
+User=openclaw
+WorkingDirectory=/home/openclaw/.openclaw/workspace/glossary-ui/server
+ExecStart=/home/openclaw/.openclaw/tools/node-v22.22.0/bin/node /home/openclaw/.openclaw/workspace/glossary-ui/server/qdrant-mock.cjs
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/log/qdrant-mock.log
+StandardError=append:/var/log/qdrant-mock.log
+
+[Install]
+WantedBy=multi-user.target
