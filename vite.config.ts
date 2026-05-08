@@ -19,8 +19,7 @@ export default defineConfig({
         changeOrigin: true
       },
       '/api/qdrant': {
-        target: 'http://185.207.0.152:6333',
-        rewrite: (path) => path.replace('/api/qdrant', '/'),
+        target: 'https://impression.yuriybevov.ru',
         changeOrigin: true
       },
       '/api': {
