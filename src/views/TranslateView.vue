@@ -3,23 +3,40 @@
     <PageTitle title="Сделать перевод" />
 
     <div class="translate-grid">
-      <TranslateForm
-        :is-loading="translationsStore.isLoading"
-        :clear-form="clearForm"
-        :initial-data="formData"
-        @translate="handleTranslate"
-      />
+      <!-- Left column: form -->
+      <div class="translate-form-col">
+        <TranslateForm
+          :is-loading="translationsStore.isLoading"
+          :clear-form="clearForm"
+          :initial-data="formData"
+          @translate="handleTranslate"
+        />
+      </div>
 
-      <ErrorState
-        v-if="translationsStore.error && !translationsStore.currentResult"
-        :message="translationsStore.error"
-        @retry="retryLastOperation"
-      />
-
-      <TranslationResultCard
-        v-if="translationsStore.currentResult"
-        :translate-result="translationsStore.currentResult"
-      />
+      <!-- Right column: result -->
+      <div class="translate-result-col">
+        <Transition name="fade" mode="out-in">
+          <ErrorState
+            v-if="translationsStore.error && !translationsStore.currentResult"
+            key="error"
+            :message="translationsStore.error"
+            @retry="retryLastOperation"
+          />
+          <TranslationResultCard
+            v-else-if="translationsStore.currentResult"
+            key="result"
+            :translate-result="translationsStore.currentResult"
+          />
+          <Card v-else key="empty" class="result-placeholder">
+            <template #content>
+              <div class="placeholder-body">
+                <i class="pi pi-language placeholder-icon"></i>
+                <p class="placeholder-text">Результат перевода появится здесь</p>
+              </div>
+            </template>
+          </Card>
+        </Transition>
+      </div>
     </div>
 
     <!-- Processing dialog -->
@@ -82,6 +99,7 @@ import PageTitle from '@/components/common/PageTitle.vue';
 import TranslateForm from '@/components/translate/TranslateForm.vue';
 import TranslationResultCard from '@/components/translate/TranslationResultCard.vue'
 import ErrorState from '@/components/common/ErrorState.vue';
+import Card from 'primevue/card';
 import Dialog from 'primevue/dialog';
 
 const translationsStore = useTranslationsStore();
@@ -144,10 +162,25 @@ const fillFromHistory = async (historyId: string) => {
     formData.client_name = item.client_name || '';
     formData.source_text = item.source_text || '';
     formData.translation_pair = item.translation_pair || `${item.source_lang}-${item.target_lang}` || 'ru-en';
+
+    // Also restore the result block
+    if (item.translated_text) {
+      translationsStore.currentResult = {
+        client_name: item.client_name || '',
+        source_text: item.source_text || '',
+        translated_text: item.translated_text,
+        status: 'completed',
+        model: item.model || 'gpt-4.1',
+        cost: item.cost || 0,
+        tokens: item.tokens || 0,
+        processing_time: item.processing_time || 0
+      };
+    }
+
     toast.add({
       severity: 'info',
       summary: 'Данные загружены',
-      detail: 'Текст и клиент из истории подставлены в форму.',
+      detail: 'Текст, клиент и результат перевода восстановлены из истории.',
       life: 3000
     });
   } catch (err: any) {
@@ -239,7 +272,73 @@ onMounted(async () => {
 }
 
 .translate-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
   width: 100%;
+}
+
+.translate-form-col {
+  min-width: 0;
+}
+
+.translate-result-col {
+  position: sticky;
+  top: 1.5rem;
+  min-width: 0;
+}
+
+.result-placeholder :deep(.p-card-body) {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-placeholder :deep(.p-card-content) {
+  padding: 0;
+}
+
+.placeholder-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.placeholder-icon {
+  font-size: 3rem;
+  color: var(--text-color-secondary);
+  opacity: 0.4;
+}
+
+.placeholder-text {
+  color: var(--text-color-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Mobile: single column */
+@media (max-width: 1024px) {
+  .translate-grid {
+    grid-template-columns: 1fr;
+  }
+  .translate-result-col {
+    position: static;
+  }
 }
 
 .field {

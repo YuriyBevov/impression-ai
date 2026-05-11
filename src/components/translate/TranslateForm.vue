@@ -151,7 +151,8 @@ const translate = () => {
     return;
   }
 
-  const client = activeClients.find((c: Client) => c.id === selectedClient.value) as Client | undefined;
+  const clients = activeClients.value as Client[];
+  const client = clients.find((c: Client) => c.id === selectedClient.value) as Client | undefined;
 
   emit('translate', {
     client_id: selectedClient.value,
