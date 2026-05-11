@@ -100,6 +100,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useClientsStore } from '@/stores/clients';
 import type { Client } from '@/types/client';
 import type { TranslateRequest } from '@/types/translation';
@@ -121,7 +122,8 @@ const emit = defineEmits<{
   translate: [data: TranslateRequest];
 }>();
 
-const { activeClients } = useClientsStore();
+const clientsStore = useClientsStore();
+const { activeClients } = storeToRefs(clientsStore);
 
 const selectedClient = ref<string | null>(null);
 const sourceText = ref('');

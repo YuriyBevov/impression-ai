@@ -94,5 +94,57 @@
       "tokens": 0,
       "processing_time": 0
     }
+  },
+  {
+    "id": "9b3f8b54-ac9f-43d6-b135-711ec55abe8f",
+    "status": "completed",
+    "progress": 0,
+    "date": "2026-05-11T16:21:20.880Z",
+    "client_id": "",
+    "client_name": "",
+    "source_text": "Исходный язык определяется автоматически по содержимому документа",
+    "translation_pair": "ru-en",
+    "source_lang": "ru",
+    "target_lang": "en",
+    "translated_text": "The source language is detected automatically based on the document content.",
+    "model": "gpt-4.1",
+    "cost": 0,
+    "tokens": 0,
+    "processing_time": 0,
+    "result": {
+      "changes": [],
+      "translated_text": "The source language is detected automatically based on the document content.",
+      "status": "completed",
+      "model": "gpt-4.1",
+      "cost": 0,
+      "tokens": 0,
+      "processing_time": 0
+    }
+  },
+  {
+    "id": "ed19d7e5-99f8-412f-8b36-a85c0d996387",
+    "status": "completed",
+    "progress": 0,
+    "date": "2026-05-11T16:26:39.421Z",
+    "client_id": "1",
+    "client_name": "ООО Ромашка",
+    "source_text": "Term Sheet",
+    "translation_pair": "ru-en",
+    "source_lang": "ru",
+    "target_lang": "en",
+    "translated_text": "Соглашение об основных условиях",
+    "model": "gpt-4.1",
+    "cost": 0,
+    "tokens": 0,
+    "processing_time": 0,
+    "result": {
+      "changes": [],
+      "translated_text": "Соглашение об основных условиях",
+      "status": "completed",
+      "model": "gpt-4.1",
+      "cost": 0,
+      "tokens": 0,
+      "processing_time": 0
+    }
   }
 ]

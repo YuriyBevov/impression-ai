@@ -14,10 +14,13 @@ async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 /**
- * Determine which payload field to use for embedding.
+ * Build bilingual text for embedding and pageContent.
  */
-function getEmbeddingText(payload: KnowledgePointPayload): string {
-  return payload.source_term || payload.text || '';
+function getBilingualText(payload: KnowledgePointPayload): string {
+  const src = payload.source_term || payload.text || '';
+  const tgt = payload.target_term || '';
+  if (src && tgt) return `${src} ${tgt}`;
+  return src || tgt;
 }
 
 export const qdrantService = {
@@ -53,16 +56,42 @@ export const qdrantService = {
   },
 
   upsertPoint: async (collectionName: string, payload: KnowledgePointPayload): Promise<any> => {
-    // Generate embedding for the source text
-    const embedText = getEmbeddingText(payload);
+    // Build bilingual text for embedding + pageContent
+    const bilingualText = getBilingualText(payload);
+    const sourceText = payload.source_term || payload.text || '';
+    const targetText = payload.target_term || '';
+    
+    // Generate embedding from bilingual text (better semantic coverage)
     let vector: number[] | undefined;
-    if (embedText) {
-      vector = await generateEmbedding(embedText);
+    if (bilingualText) {
+      vector = await generateEmbedding(bilingualText);
+    }
+    
+    // Convert to pipeline-compatible format: pageContent + nested metadata
+    const qdrantPayload: any = {
+      pageContent: bilingualText,
+      metadata: {
+        lang_1: sourceText,
+        lang_2: targetText,
+        category: payload.context || payload.category || 'general',
+        type: 'term'
+      }
+    };
+    
+    // Add optional fields
+    if (payload.client) {
+      qdrantPayload.metadata.client = payload.client;
+    }
+    if (payload.tags && payload.tags.length > 0) {
+      qdrantPayload.metadata.tags = payload.tags;
+    }
+    if (payload.note) {
+      qdrantPayload.metadata.note = payload.note;
     }
     
     const point: any = {
       id: Date.now(),
-      payload
+      payload: qdrantPayload
     };
     if (vector && vector.length > 0) {
       point.vector = vector;

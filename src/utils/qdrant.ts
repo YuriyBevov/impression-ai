@@ -28,23 +28,38 @@ export const normalizePoints = (points: any[]): KnowledgePoint[] => {
   return points.map(point => {
     const p = point.payload || {};
     
-    // Parse source_term: try new keys first, then text
-    let source_term = p.source_term || p.sourceTerm || p.text || '';
+    // Handle new pipeline format: { pageContent, metadata: { lang_1, lang_2, ... } }
+    const meta = p.metadata || {};
     
-    // Parse target_term: try new keys first, then pageContent (may contain "source => target" or just target)
-    let target_term = p.target_term || p.targetTerm || p.targetText || '';
-    if (!target_term && p.pageContent) {
-      // pageContent may contain "source => target" format or just the target
-      const arrowMatch = p.pageContent.match(/=>\s*(.+)/);
-      if (arrowMatch) {
-        target_term = arrowMatch[1].trim();
-        // If source_term is empty, extract it from before the arrow
-        if (!source_term) {
-          const beforeArrow = p.pageContent.split('=>')[0].trim();
-          if (beforeArrow) source_term = beforeArrow;
+    let source_term = '';
+    let target_term = '';
+    
+    if (meta.lang_1 || meta.lang_2) {
+      // New nested metadata format — prefer this
+      source_term = meta.lang_1 || '';
+      target_term = meta.lang_2 || '';
+    } else {
+      // Legacy flat format
+      source_term = p.source_term || p.sourceTerm || p.text || '';
+      target_term = p.target_term || p.targetTerm || p.targetText || '';
+      
+      // Fallback: parse from pageContent
+      if (!target_term && p.pageContent) {
+        const arrowMatch = p.pageContent.match(/=>\s*(.+)/);
+        if (arrowMatch) {
+          target_term = arrowMatch[1].trim();
+          if (!source_term) {
+            const beforeArrow = p.pageContent.split('=>')[0].trim();
+            if (beforeArrow) source_term = beforeArrow;
+          }
+        } else {
+          // Bilingual space-separated: try to split
+          const parts = p.pageContent.split(' ');
+          if (parts.length >= 2) {
+            // Heuristic: first half EN, second half RU
+            target_term = p.pageContent;
+          }
         }
-      } else {
-        target_term = p.pageContent;
       }
     }
 
@@ -55,12 +70,12 @@ export const normalizePoints = (points: any[]): KnowledgePoint[] => {
       payload: {
         source_term,
         target_term,
-        context: p.category || p.context || p.domain || p.description || '',
-        note: p.note || p.notes || '',
-        tags: Array.isArray(p.tags) ? p.tags : [],
+        context: meta.category || p.category || p.context || p.domain || p.description || '',
+        note: meta.note || p.note || p.notes || '',
+        tags: meta.tags || (Array.isArray(p.tags) ? p.tags : []),
         source_lang: p.source_lang || p.sourceLang || '',
         target_lang: p.target_lang || p.targetLang || '',
-        client: p.client || ''
+        client: meta.client || p.client || ''
       }
     };
   });
