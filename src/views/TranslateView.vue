@@ -3,9 +3,10 @@
     <PageTitle title="Сделать перевод" />
 
     <div class="translate-grid">
-      <!-- Left column: form -->
+      <!-- Left column: form with source + result side by side -->
       <div class="translate-form-col">
         <TranslateForm
+          ref="formRef"
           :is-loading="translationsStore.isLoading"
           :clear-form="clearForm"
           :initial-data="formData"
@@ -13,17 +14,11 @@
         />
       </div>
 
-      <!-- Right column: result -->
+      <!-- Right column: metadata & re-translate -->
       <div class="translate-result-col">
         <Transition name="fade" mode="out-in">
-          <ErrorState
-            v-if="translationsStore.error && !translationsStore.currentResult"
-            key="error"
-            :message="translationsStore.error"
-            @retry="retryLastOperation"
-          />
           <TranslationResultCard
-            v-else-if="translationsStore.currentResult"
+            v-if="translationsStore.currentResult"
             key="result"
             :translate-result="translationsStore.currentResult"
           />
@@ -31,7 +26,7 @@
             <template #content>
               <div class="placeholder-body">
                 <i class="pi pi-language placeholder-icon"></i>
-                <p class="placeholder-text">Результат перевода появится здесь</p>
+                <p class="placeholder-text">Результат перевода появится справа от исходного текста</p>
               </div>
             </template>
           </Card>
@@ -108,6 +103,8 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
+const formRef = ref<InstanceType<typeof TranslateForm> | null>(null);
+
 const showProcessingDialog = ref(false);
 const showClearDialog = ref(false);
 const clearForm = ref(false);
@@ -117,6 +114,7 @@ const formData = reactive<Partial<{
   client_id: string;
   client_name: string;
   source_text: string;
+  result_text: string;
   translation_pair: string;
 }>>({});
 
@@ -127,7 +125,11 @@ const handleTranslate = async (data: TranslateRequest) => {
   try {
     await translationsStore.translate(data);
 
-    // Success
+    // Success — sync translated text into the result textarea
+    if (translationsStore.currentResult?.translated_text && formRef.value) {
+      formRef.value.resultText = translationsStore.currentResult.translated_text;
+    }
+
     showProcessingDialog.value = false;
     toast.add({
       severity: 'success',
@@ -161,9 +163,10 @@ const fillFromHistory = async (historyId: string) => {
     formData.client_id = item.client_id || '';
     formData.client_name = item.client_name || '';
     formData.source_text = item.source_text || '';
+    formData.result_text = item.translated_text || '';
     formData.translation_pair = item.translation_pair || `${item.source_lang}-${item.target_lang}` || 'ru-en';
 
-    // Also restore the result block
+    // Also restore the result card
     if (item.translated_text) {
       translationsStore.currentResult = {
         client_name: item.client_name || '',
@@ -273,7 +276,7 @@ onMounted(async () => {
 
 .translate-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
   align-items: start;
   width: 100%;
@@ -290,7 +293,7 @@ onMounted(async () => {
 }
 
 .result-placeholder :deep(.p-card-body) {
-  min-height: 300px;
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -317,7 +320,7 @@ onMounted(async () => {
 
 .placeholder-text {
   color: var(--text-color-secondary);
-  font-size: 1rem;
+  font-size: 0.95rem;
   margin: 0;
 }
 
@@ -340,42 +343,4 @@ onMounted(async () => {
     position: static;
   }
 }
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.formgrid.grid {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.translate-form :deep(.p-card-body) {
-  gap: 0.5rem;
-  padding: 24px;
-}
-
-.translate-form :deep(.p-card-content) {
-  padding: 0;
-}
-
-.translate-form :deep(.p-card-title) {
-  padding: 0 0 0.5rem;
-}
-
-.translate-form :deep(.p-textarea.p-component.w-full.source-textarea) {
-  width: 100%;
-}
-
-.translate-form :deep(.p-select),
-.translate-form :deep(.p-selectbutton),
-.translate-form :deep(.p-selectbutton .p-button),
-.translate-form :deep(.p-fileupload),
-.translate-form :deep(.p-fileupload .p-button) {
-  width: 100%;
-}
-
 </style>

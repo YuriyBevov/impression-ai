@@ -146,5 +146,31 @@
       "tokens": 0,
       "processing_time": 0
     }
+  },
+  {
+    "id": "50d02478-01c0-4a43-afcd-e2fb0f352a49",
+    "status": "completed",
+    "progress": 0,
+    "date": "2026-05-11T16:45:10.215Z",
+    "client_id": "1",
+    "client_name": "ООО Ромашка",
+    "source_text": "Term Sheet",
+    "translation_pair": "ru-en",
+    "source_lang": "ru",
+    "target_lang": "en",
+    "translated_text": "Term Sheet",
+    "model": "gpt-4.1",
+    "cost": 0,
+    "tokens": 0,
+    "processing_time": 0,
+    "result": {
+      "changes": [],
+      "translated_text": "Term Sheet",
+      "status": "completed",
+      "model": "gpt-4.1",
+      "cost": 0,
+      "tokens": 0,
+      "processing_time": 0
+    }
   }
 ]

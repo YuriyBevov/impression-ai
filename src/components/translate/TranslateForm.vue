@@ -4,7 +4,7 @@
       <div class="form-title-wrap">
         <div>
           <h2 class="form-title">Новый перевод</h2>
-          <p class="form-subtitle">Выберите клиента, укажите направление и отправьте текст или документ на перевод.</p>
+          <p class="form-subtitle">Выберите клиента и отправьте текст на перевод.</p>
         </div>
       </div>
     </template>
@@ -31,33 +31,52 @@
           <small v-if="!selectedClient && submitted" class="p-error">Выберите клиента</small>
         </div>
 
+        <!-- Two-column translation layout: source + result side by side -->
+        <div class="translation-columns">
+          <!-- Left: Source text -->
+          <div class="field source-col">
+            <div class="field-header">
+              <label for="source-text" class="block">Текст для перевода</label>
+              <span class="text-counter">{{ sourceText.length }}/10000</span>
+            </div>
+            <Textarea
+              id="source-text"
+              v-model="sourceText"
+              rows="12"
+              placeholder="Вставьте текст для перевода сюда..."
+              class="w-full source-textarea"
+              :maxlength="10000"
+              :class="{ 'p-invalid': !hasContent && submitted }"
+            />
+            <small v-if="!hasContent && submitted" class="p-error">Добавьте текст</small>
+          </div>
+
+          <!-- Right: Result text -->
+          <div class="field result-col">
+            <label for="result-text" class="block">Результат перевода</label>
+            <Textarea
+              id="result-text"
+              v-model="resultText"
+              rows="12"
+              placeholder="Готовый перевод появится здесь..."
+              class="w-full result-textarea"
+              :class="{ 'result-filled': !!resultText }"
+              readonly
+            />
+          </div>
+        </div>
+
         <div class="field col-12">
           <label class="block mb-2">Направление перевода</label>
           <div class="direction-display">
             <i class="pi pi-arrows-alt-h direction-icon"></i>
             <span class="direction-label">Русский ↔ Английский</span>
           </div>
-          <small class="direction-hint">Исходный язык определяется автоматически по содержимому документа</small>
+          <small class="direction-hint">Исходный язык определяется автоматически</small>
         </div>
 
-        <div class="field col-12">
-          <div class="field-header">
-            <label for="source-text" class="block">Текст для перевода</label>
-            <span class="text-counter">{{ sourceText.length }}/10000</span>
-          </div>
-          <Textarea
-            id="source-text"
-            v-model="sourceText"
-            rows="10"
-            placeholder="Вставьте текст для перевода или загрузите документ ниже"
-            class="w-full source-textarea"
-            :maxlength="10000"
-            :class="{ 'p-invalid': !hasContent && submitted }"
-          />
-          <small v-if="!hasContent && submitted" class="p-error">Добавьте текст или загрузите документ</small>
-        </div>
-
-        <div class="field col-12">
+        <div class="field col-12" v-if="false">
+          <!-- File upload temporarily hidden -->
           <label class="block mb-2">Документ</label>
           <FileUpload
             mode="advanced"
@@ -98,6 +117,7 @@
   </Card>
 </template>
 
+
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
@@ -112,6 +132,7 @@ interface Props {
     client_id: string;
     client_name: string;
     source_text: string;
+    result_text: string;
     translation_pair: string;
   }>;
 }
@@ -127,6 +148,7 @@ const { activeClients } = storeToRefs(clientsStore);
 
 const selectedClient = ref<string | null>(null);
 const sourceText = ref('');
+const resultText = ref('');
 const selectedFile = ref<File | null>(null);
 const submitted = ref(false);
 
@@ -151,8 +173,10 @@ const translate = () => {
     return;
   }
 
-  const clients = activeClients.value as Client[];
+  const clients = (activeClients.value || []) as Client[];
   const client = clients.find((c: Client) => c.id === selectedClient.value) as Client | undefined;
+
+  resultText.value = ''; // Clear previous result before new translation
 
   emit('translate', {
     client_id: selectedClient.value,
@@ -173,6 +197,7 @@ watch(() => props.initialData, (val) => {
   if (val) {
     if (val.client_id) selectedClient.value = val.client_id;
     if (val.source_text) sourceText.value = val.source_text;
+    if (val.result_text) resultText.value = val.result_text;
     submitted.value = false;
   }
 }, { deep: true, immediate: true });
@@ -180,11 +205,15 @@ watch(() => props.initialData, (val) => {
 watch(() => props.clearForm, (val) => {
   if (val) {
     sourceText.value = '';
+    resultText.value = '';
     selectedFile.value = null;
     selectedClient.value = null;
     submitted.value = false;
   }
 });
+
+// Expose resultText to parent
+defineExpose({ resultText });
 </script>
 
 <style scoped>
@@ -198,21 +227,30 @@ watch(() => props.clearForm, (val) => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
 }
 
 .form-title {
-  margin: 0;
+  margin: 0 0 0.25rem;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .form-subtitle {
-  margin: 0.5rem 0 0;
+  margin: 0;
+  font-size: 0.9rem;
   color: var(--text-color-secondary);
-  line-height: 1.5;
 }
 
-.field {
+/* Two-column layout */
+.translation-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.source-col, .result-col {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -222,80 +260,75 @@ watch(() => props.clearForm, (val) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
 }
 
 .text-counter {
+  font-size: 0.8rem;
   color: var(--text-color-secondary);
-  font-size: 0.875rem;
+}
+
+.source-textarea,
+.result-textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.result-textarea {
+  background-color: var(--surface-ground) !important;
+}
+
+.result-textarea.result-filled {
+  border-left: 3px solid #3b82f6;
 }
 
 .direction-display {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 8px;
+  padding: 8px 12px;
   background: var(--surface-ground);
-  border-radius: 0.5rem;
-  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  border: 1px solid var(--p-textarea-border-color);
 }
 
 .direction-icon {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   color: var(--primary-color);
 }
 
 .direction-label {
-  font-size: 1rem;
   font-weight: 500;
-  color: var(--text-color);
 }
 
 .direction-hint {
   display: block;
-  margin-top: 0.75rem;
+  margin-top: 4px;
+  font-size: 0.85rem;
   color: var(--text-color-secondary);
-}
-
-.source-textarea {
-  width: 100%;
-  min-height: 14rem;
-  resize: vertical;
-}
-
-.translate-form :deep(.p-textarea.p-component.w-full.source-textarea) {
-  width: 100%;
-}
-
-.upload-empty {
-  min-height: 7rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  color: var(--text-color-secondary);
-}
-
-.upload-empty i {
-  font-size: 1.75rem;
-}
-
-.selected-file {
-  display: block;
-  margin-top: 0.75rem;
-  color: var(--primary-color);
 }
 
 .translate-button {
-  margin-top: 0.5rem;
+  margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .translation-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .formgrid.grid {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .translate-form :deep(.p-card-body) {
@@ -311,26 +344,38 @@ watch(() => props.clearForm, (val) => {
   padding: 0 0 0.5rem;
 }
 
-.translate-form :deep(.p-select),
-.translate-form :deep(.p-selectbutton),
-.translate-form :deep(.p-selectbutton .p-button),
-.translate-form :deep(.p-fileupload),
-.translate-form :deep(.p-fileupload .p-button) {
+.translate-form :deep(.p-textarea.p-component.w-full.source-textarea) {
   width: 100%;
 }
 
-.translate-form :deep(.p-selectbutton) {
-  display: flex;
-}
-
+.translate-form :deep(.p-select),
+.translate-form :deep(.p-selectbutton),
 .translate-form :deep(.p-selectbutton .p-button) {
-  justify-content: center;
+  width: 100%;
 }
 
-@media (max-width: 768px) {
-  .field-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.translate-upload :deep(.p-fileupload-buttonbar) {
+  border-radius: 8px;
+}
+
+.upload-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-color-secondary);
+  padding: 1.5rem;
+}
+
+.upload-empty i {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.selected-file {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--primary-color);
 }
 </style>
