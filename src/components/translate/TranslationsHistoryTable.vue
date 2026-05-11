@@ -26,9 +26,6 @@
 			currentPageReportTemplate="Показаны {first} - {last} из {totalRecords}"
 			responsiveLayout="scroll"
 			stripedRows
-			@row-click="onRowClick"
-			selectionMode="single"
-			dataKey="id"
 		>
 			<Column field="date" header="Дата" style="min-width: 120px" sortable>
 				<template #body="slotProps">
@@ -39,7 +36,7 @@
 			<Column
 				field="client_name"
 				header="Клиент"
-				style="min-width: 160px"
+				style="min-width: 140px"
 				sortable
 			>
 				<template #body="slotProps">
@@ -89,15 +86,27 @@
 				</template>
 			</Column>
 
-			<Column field="cost" header="Стоимость" style="min-width: 100px" sortable>
+			<Column field="cost" header="Стоимость" style="min-width: 80px" sortable>
 				<template #body="slotProps">
 					{{ "$" + formatCost(slotProps.data.cost) }}
 				</template>
 			</Column>
 
-			<Column field="tokens" header="Токены" style="width: 80px" sortable>
+			<Column field="tokens" header="Токены" style="width: 70px" sortable>
 				<template #body="slotProps">
 					{{ slotProps.data.tokens }}
+				</template>
+			</Column>
+
+			<Column header="Действия" style="min-width: 140px">
+				<template #body="slotProps">
+					<Button
+						label="Вернуть в работу"
+						icon="pi pi-replay"
+						size="small"
+						severity="help"
+						@click="returnToWork(slotProps.data)"
+					/>
 				</template>
 			</Column>
 		</DataTable>
@@ -118,18 +127,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<{
-	fillFromHistory: [item: TranslationHistoryItem];
-}>();
 const router = useRouter();
 const clientsStore = useClientsStore();
-
-const onRowClick = (event: any) => {
-	const item = event.data as TranslationHistoryItem;
-	if (item && item.id) {
-		router.push({ name: 'translate', query: { fillFromHistory: item.id } });
-	}
-};
 
 const clientIdFilter = ref<string | null>(null);
 
@@ -156,6 +155,12 @@ const filteredHistoryItems = computed(() => {
 
 const updateFilters = () => {
 	// Filters are handled by computed properties, so we don't need special logic here
+};
+
+const returnToWork = (item: TranslationHistoryItem) => {
+	if (item && item.id) {
+		router.push({ path: '/translate', query: { fillFromHistory: item.id } });
+	}
 };
 </script>
 
@@ -188,13 +193,5 @@ const updateFilters = () => {
 
 .history-table :deep(.p-datatable-thead > tr > th) {
 	white-space: nowrap;
-}
-
-.history-table :deep(.p-datatable-tbody > tr) {
-	cursor: pointer;
-}
-
-.history-table :deep(.p-datatable-tbody > tr:hover) {
-	background-color: var(--surface-hover);
 }
 </style>

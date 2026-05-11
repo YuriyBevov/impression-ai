@@ -30,5 +30,69 @@
       "tokens": 0,
       "processing_time": 0
     }
+  },
+  {
+    "id": "ad1bb891-40e1-4068-8621-94bb608bc103",
+    "status": "completed",
+    "progress": 0,
+    "date": "2026-05-11T16:17:40.753Z",
+    "client_id": "",
+    "client_name": "",
+    "source_text": "test translation",
+    "translation_pair": "ru-en",
+    "source_lang": "ru",
+    "target_lang": "en",
+    "translated_text": "Тест перевод",
+    "model": "gpt-4.1",
+    "cost": 0,
+    "tokens": 0,
+    "processing_time": 0,
+    "result": {
+      "changes": [
+        {
+          "original_term": "тестовый",
+          "corrected_term": "Тест",
+          "reason": "Согласно глоссарию, правильный перевод — 'Тест' с заглавной буквы."
+        }
+      ],
+      "translated_text": "Тест перевод",
+      "status": "completed",
+      "model": "gpt-4.1",
+      "cost": 0,
+      "tokens": 0,
+      "processing_time": 0
+    }
+  },
+  {
+    "id": "ca607429-a951-4f97-a4c5-b3ba01c0e953",
+    "status": "completed",
+    "progress": 0,
+    "date": "2026-05-11T16:18:09.688Z",
+    "client_id": "",
+    "client_name": "",
+    "source_text": "test translation",
+    "translation_pair": "ru-en",
+    "source_lang": "ru",
+    "target_lang": "en",
+    "translated_text": "тест перевод",
+    "model": "gpt-4.1",
+    "cost": 0,
+    "tokens": 0,
+    "processing_time": 0,
+    "result": {
+      "changes": [
+        {
+          "original_term": "тестовый",
+          "corrected_term": "тест",
+          "reason": "Согласно глоссарию, корректный перевод термина 'test' — 'тест'."
+        }
+      ],
+      "translated_text": "тест перевод",
+      "status": "completed",
+      "model": "gpt-4.1",
+      "cost": 0,
+      "tokens": 0,
+      "processing_time": 0
+    }
   }
 ]
