@@ -26,6 +26,9 @@
 			currentPageReportTemplate="Показаны {first} - {last} из {totalRecords}"
 			responsiveLayout="scroll"
 			stripedRows
+			@row-click="onRowClick"
+			selectionMode="single"
+			dataKey="id"
 		>
 			<Column field="date" header="Дата" style="min-width: 120px" sortable>
 				<template #body="slotProps">
@@ -103,6 +106,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import { useClientsStore } from "@/stores/clients";
 import type { Client } from "@/types/client";
 import type { TranslationHistoryItem } from "@/types/translation";
@@ -114,7 +118,18 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<{
+	fillFromHistory: [item: TranslationHistoryItem];
+}>();
+const router = useRouter();
 const clientsStore = useClientsStore();
+
+const onRowClick = (event: any) => {
+	const item = event.data as TranslationHistoryItem;
+	if (item && item.id) {
+		router.push({ name: 'translate', query: { fillFromHistory: item.id } });
+	}
+};
 
 const clientIdFilter = ref<string | null>(null);
 
@@ -173,5 +188,13 @@ const updateFilters = () => {
 
 .history-table :deep(.p-datatable-thead > tr > th) {
 	white-space: nowrap;
+}
+
+.history-table :deep(.p-datatable-tbody > tr) {
+	cursor: pointer;
+}
+
+.history-table :deep(.p-datatable-tbody > tr:hover) {
+	background-color: var(--surface-hover);
 }
 </style>

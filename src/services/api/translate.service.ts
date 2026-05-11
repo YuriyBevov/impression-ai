@@ -47,15 +47,20 @@ export const translateService = {
 
   fetchHistory: async (clientId?: string): Promise<TranslationHistoryItem[]> => {
     try {
-      let url = '/api/n8n/webhook/translations';
+      let url = '/api/translate/history';
       if (clientId) {
         url += `?client_id=${clientId}`;
       }
       const response = await http.get<TranslationHistoryItem[]>(url);
       return response.data;
     } catch (error) {
-      console.warn('Translations endpoint unavailable (502 expected - no webhook yet)');
+      console.warn('Failed to fetch history:', error);
       return [];
     }
+  },
+
+  getHistoryItem: async (id: string): Promise<TranslationHistoryItem> => {
+    const response = await http.get<TranslationHistoryItem>(`/api/translate/history/${id}`);
+    return response.data;
   }
 };

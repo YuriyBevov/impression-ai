@@ -6,6 +6,7 @@
       <TranslateForm
         :is-loading="translationsStore.isLoading"
         :clear-form="clearForm"
+        :initial-data="formData"
         @translate="handleTranslate"
       />
 
@@ -70,11 +71,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, reactive, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useTranslationsStore } from '@/stores/translations';
 import { useClientsStore } from '@/stores/clients';
-import type { TranslateRequest } from '@/types/translation';
+import { translateService } from '@/services/api/translate.service';
+import type { TranslateRequest, TranslationHistoryItem } from '@/types/translation';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TranslateForm from '@/components/translate/TranslateForm.vue';
 import TranslationResultCard from '@/components/translate/TranslationResultCard.vue'
@@ -83,11 +86,21 @@ import Dialog from 'primevue/dialog';
 
 const translationsStore = useTranslationsStore();
 const clientsStore = useClientsStore();
+const route = useRoute();
+const router = useRouter();
 const toast = useToast();
 
 const showProcessingDialog = ref(false);
 const showClearDialog = ref(false);
 const clearForm = ref(false);
+
+// Data pre-filled from history item
+const formData = reactive<Partial<{
+  client_id: string;
+  client_name: string;
+  source_text: string;
+  translation_pair: string;
+}>>({});
 
 const handleTranslate = async (data: TranslateRequest) => {
   clearForm.value = false;
@@ -110,7 +123,6 @@ const handleTranslate = async (data: TranslateRequest) => {
       showClearDialog.value = true;
     }, 500);
   } catch {
-    // Error - store already has error details
     showProcessingDialog.value = false;
   }
 };
@@ -125,8 +137,47 @@ const retryLastOperation = () => {
   translationsStore.error = null;
 };
 
+const fillFromHistory = async (historyId: string) => {
+  try {
+    const item = await translateService.getHistoryItem(historyId);
+    formData.client_id = item.client_id || '';
+    formData.client_name = item.client_name || '';
+    formData.source_text = item.source_text || '';
+    formData.translation_pair = item.translation_pair || `${item.source_lang}-${item.target_lang}` || 'ru-en';
+    toast.add({
+      severity: 'info',
+      summary: 'Данные загружены',
+      detail: 'Текст и клиент из истории подставлены в форму.',
+      life: 3000
+    });
+  } catch (err: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Ошибка',
+      detail: 'Не удалось загрузить данные из истории.',
+      life: 3000
+    });
+  }
+};
+
+// Handle fillFromHistory query param
+watch(() => route.query.fillFromHistory, async (val) => {
+  if (val && typeof val === 'string') {
+    await fillFromHistory(val);
+    // Clean query param after filling
+    router.replace({ query: {} });
+  }
+});
+
+// Also check on mount
 onMounted(async () => {
   await clientsStore.fetchAll();
+
+  const fillId = route.query.fillFromHistory;
+  if (fillId && typeof fillId === 'string') {
+    await fillFromHistory(fillId);
+    router.replace({ query: {} });
+  }
 });
 </script>
 

@@ -107,6 +107,12 @@ import type { TranslateRequest } from '@/types/translation';
 interface Props {
   isLoading: boolean;
   clearForm?: boolean;
+  initialData?: Partial<{
+    client_id: string;
+    client_name: string;
+    source_text: string;
+    translation_pair: string;
+  }>;
 }
 
 const props = defineProps<Props>();
@@ -158,6 +164,15 @@ watch(() => props.isLoading, (newLoading, oldLoading) => {
     submitted.value = false;
   }
 });
+
+// Watch for pre-fill data from history
+watch(() => props.initialData, (val) => {
+  if (val) {
+    if (val.client_id) selectedClient.value = val.client_id;
+    if (val.source_text) sourceText.value = val.source_text;
+    submitted.value = false;
+  }
+}, { deep: true, immediate: true });
 
 watch(() => props.clearForm, (val) => {
   if (val) {

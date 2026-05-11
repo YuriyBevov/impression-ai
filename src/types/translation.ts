@@ -22,16 +22,18 @@ export interface TranslateResponse {
 }
 
 export interface TranslationHistoryItem {
-  id?: string;
+  id: string;
   date: string;
   client_id: string;
   client_name: string;
-  source_lang: LanguageCode;
-  target_lang: LanguageCode;
+  source_lang: string;
+  target_lang: string;
   source_text: string;
   translated_text: string;
-  status: string;
+  status?: string;
   model: string;
   cost: number;
   tokens: number;
+  translation_pair?: string;
+  processing_time?: number;
 }
