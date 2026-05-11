@@ -4,7 +4,7 @@
       <div class="form-title-wrap">
         <div>
           <h2 class="form-title">Новый перевод</h2>
-          <p class="form-subtitle">Выберите клиента и отправьте текст на перевод.</p>
+          <p class="form-subtitle">Выберите клиента, укажите направление и отправьте текст или документ на перевод.</p>
         </div>
       </div>
     </template>
@@ -31,66 +31,51 @@
           <small v-if="!selectedClient && submitted" class="p-error">Выберите клиента</small>
         </div>
 
-        <!-- Two-column translation layout: source + result side by side -->
-        <div class="translation-columns">
-          <!-- Left: Source text -->
-          <div class="field source-col">
-            <div class="field-header">
-              <label for="source-text" class="block">Текст для перевода</label>
-              <span class="text-counter">{{ sourceText.length }}/10000</span>
-            </div>
-            <Textarea
-              id="source-text"
-              v-model="sourceText"
-              rows="12"
-              placeholder="Вставьте текст для перевода сюда..."
-              class="w-full source-textarea"
-              :maxlength="10000"
-              :class="{ 'p-invalid': !hasContent && submitted }"
-            />
-            <small v-if="!hasContent && submitted" class="p-error">Добавьте текст</small>
-          </div>
-
-          <!-- Right: Result text -->
-          <div class="field result-col">
-            <label for="result-text" class="block">Результат перевода</label>
-            <Textarea
-              id="result-text"
-              v-model="resultText"
-              rows="12"
-              placeholder="Готовый перевод появится здесь..."
-              class="w-full"
-              readonly
-            />
-            <!-- Metadata: show only when result exists -->
-            <div v-if="resultText && meta" class="result-meta">
-              <span class="meta-item">
-                <i class="pi pi-server mr-1"></i>
-                {{ meta.model }}
-              </span>
-              <span class="meta-item">
-                <i class="pi pi-calculator mr-1"></i>
-                {{ meta.tokens }} токенов
-              </span>
-              <span class="meta-item">
-                <i class="pi pi-dollar mr-1"></i>
-                {{ formatCost(meta.cost) }} $
-              </span>
-            </div>
-          </div>
-        </div>
-
         <div class="field col-12">
           <label class="block mb-2">Направление перевода</label>
           <div class="direction-display">
             <i class="pi pi-arrows-alt-h direction-icon"></i>
             <span class="direction-label">Русский ↔ Английский</span>
           </div>
-          <small class="direction-hint">Исходный язык определяется автоматически</small>
+          <small class="direction-hint">Исходный язык определяется автоматически по содержимому документа</small>
         </div>
 
-        <div class="field col-12" v-if="false">
-          <!-- File upload temporarily hidden -->
+        <div class="field col-12">
+          <div class="translation-row">
+            <!-- Source text -->
+            <div class="source-col">
+              <div class="field-header">
+                <label for="source-text" class="block">Текст для перевода</label>
+                <span class="text-counter">{{ sourceText.length }}/10000</span>
+              </div>
+              <Textarea
+                id="source-text"
+                v-model="sourceText"
+                rows="10"
+                placeholder="Вставьте текст для перевода или загрузите документ ниже"
+                class="w-full"
+                :maxlength="10000"
+                :class="{ 'p-invalid': !hasContent && submitted }"
+              />
+              <small v-if="!hasContent && submitted" class="p-error">Добавьте текст или загрузите документ</small>
+            </div>
+
+            <!-- Result text -->
+            <div class="result-col">
+              <label for="result-text" class="block">Результат перевода</label>
+              <Textarea
+                id="result-text"
+                v-model="resultText"
+                rows="10"
+                placeholder="Результат перевода"
+                class="w-full"
+                readonly
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="field col-12">
           <label class="block mb-2">Документ</label>
           <FileUpload
             mode="advanced"
@@ -137,8 +122,7 @@ import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useClientsStore } from '@/stores/clients';
 import type { Client } from '@/types/client';
-import type { TranslateRequest, TranslateResponse } from '@/types/translation';
-import { formatCost } from '@/utils/formatters';
+import type { TranslateRequest } from '@/types/translation';
 
 interface Props {
   isLoading: boolean;
@@ -150,7 +134,6 @@ interface Props {
     result_text: string;
     translation_pair: string;
   }>;
-  meta?: TranslateResponse | null;
 }
 
 const props = defineProps<Props>();
@@ -192,7 +175,8 @@ const translate = () => {
   const clients = (activeClients.value || []) as Client[];
   const client = clients.find((c: Client) => c.id === selectedClient.value) as Client | undefined;
 
-  resultText.value = ''; // Clear previous result before new translation
+  // Clear previous result
+  resultText.value = '';
 
   emit('translate', {
     client_id: selectedClient.value,
@@ -228,7 +212,7 @@ watch(() => props.clearForm, (val) => {
   }
 });
 
-// Expose resultText to parent
+// Expose resultText to parent for syncing after translation
 defineExpose({ resultText });
 </script>
 
@@ -257,13 +241,12 @@ defineExpose({ resultText });
   color: var(--text-color-secondary);
 }
 
-/* Two-column layout */
-.translation-columns {
+/* Two-column row for source + result */
+.translation-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   width: 100%;
-  margin-bottom: 1rem;
 }
 
 .source-col, .result-col {
@@ -281,27 +264,6 @@ defineExpose({ resultText });
 .text-counter {
   font-size: 0.8rem;
   color: var(--text-color-secondary);
-}
-
-.source-textarea {
-  width: 100%;
-  font-family: inherit;
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.result-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 6px 0;
-  font-size: 0.85rem;
-  color: var(--text-color-secondary);
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
 }
 
 .direction-display {
@@ -335,7 +297,7 @@ defineExpose({ resultText });
 }
 
 @media (max-width: 768px) {
-  .translation-columns {
+  .translation-row {
     grid-template-columns: 1fr;
   }
 }
@@ -349,7 +311,7 @@ defineExpose({ resultText });
 .formgrid.grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .translate-form :deep(.p-card-body) {
@@ -365,13 +327,15 @@ defineExpose({ resultText });
   padding: 0 0 0.5rem;
 }
 
-.translate-form :deep(.p-textarea.p-component.w-full.source-textarea) {
+.translate-form :deep(.p-textarea.p-component.w-full) {
   width: 100%;
 }
 
 .translate-form :deep(.p-select),
 .translate-form :deep(.p-selectbutton),
-.translate-form :deep(.p-selectbutton .p-button) {
+.translate-form :deep(.p-selectbutton .p-button),
+.translate-form :deep(.p-fileupload),
+.translate-form :deep(.p-fileupload .p-button) {
   width: 100%;
 }
 

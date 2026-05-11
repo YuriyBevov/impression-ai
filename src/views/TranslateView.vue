@@ -7,7 +7,6 @@
       :is-loading="translationsStore.isLoading"
       :clear-form="clearForm"
       :initial-data="formData"
-      :meta="translationsStore.currentResult"
       @translate="handleTranslate"
     />
 
@@ -66,10 +65,9 @@ import { useToast } from 'primevue/usetoast';
 import { useTranslationsStore } from '@/stores/translations';
 import { useClientsStore } from '@/stores/clients';
 import { translateService } from '@/services/api/translate.service';
-import type { TranslateRequest, TranslationHistoryItem } from '@/types/translation';
+import type { TranslateRequest } from '@/types/translation';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TranslateForm from '@/components/translate/TranslateForm.vue';
-
 import Dialog from 'primevue/dialog';
 
 const translationsStore = useTranslationsStore();
@@ -84,7 +82,6 @@ const showProcessingDialog = ref(false);
 const showClearDialog = ref(false);
 const clearForm = ref(false);
 
-// Data pre-filled from history item
 const formData = reactive<Partial<{
   client_id: string;
   client_name: string;
@@ -100,7 +97,7 @@ const handleTranslate = async (data: TranslateRequest) => {
   try {
     await translationsStore.translate(data);
 
-    // Success — sync translated text into the result textarea
+    // Sync translated text into the result textarea
     if (translationsStore.currentResult?.translated_text && formRef.value) {
       formRef.value.resultText = translationsStore.currentResult.translated_text;
     }
@@ -113,7 +110,6 @@ const handleTranslate = async (data: TranslateRequest) => {
       life: 3000
     });
 
-    // Ask to clear
     setTimeout(() => {
       showClearDialog.value = true;
     }, 500);
@@ -128,8 +124,6 @@ const onClearConfirm = () => {
   translationsStore.currentResult = null;
 };
 
-
-
 const fillFromHistory = async (historyId: string) => {
   try {
     const item = await translateService.getHistoryItem(historyId);
@@ -139,27 +133,13 @@ const fillFromHistory = async (historyId: string) => {
     formData.result_text = item.translated_text || '';
     formData.translation_pair = item.translation_pair || `${item.source_lang}-${item.target_lang}` || 'ru-en';
 
-    // Also restore the result card
-    if (item.translated_text) {
-      translationsStore.currentResult = {
-        client_name: item.client_name || '',
-        source_text: item.source_text || '',
-        translated_text: item.translated_text,
-        status: 'completed',
-        model: item.model || 'gpt-4.1',
-        cost: item.cost || 0,
-        tokens: item.tokens || 0,
-        processing_time: item.processing_time || 0
-      };
-    }
-
     toast.add({
       severity: 'info',
       summary: 'Данные загружены',
       detail: 'Текст, клиент и результат перевода восстановлены из истории.',
       life: 3000
     });
-  } catch (err: any) {
+  } catch {
     toast.add({
       severity: 'error',
       summary: 'Ошибка',
@@ -169,16 +149,13 @@ const fillFromHistory = async (historyId: string) => {
   }
 };
 
-// Handle fillFromHistory query param
 watch(() => route.query.fillFromHistory, async (val) => {
   if (val && typeof val === 'string') {
     await fillFromHistory(val);
-    // Clean query param after filling
     router.replace({ query: {} });
   }
 });
 
-// Also check on mount
 onMounted(async () => {
   await clientsStore.fetchAll();
 
@@ -238,13 +215,6 @@ onMounted(async () => {
 .processing-dialog :deep(.p-dialog-header),
 .clear-dialog :deep(.p-dialog-header) {
   padding-bottom: 0.5rem;
-}
-</style>
-
-<style scoped>
-.translate-view {
-  margin: 0 auto;
-  width: 100%;
 }
 
 .translate-view {
