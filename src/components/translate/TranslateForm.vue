@@ -59,10 +59,24 @@
               v-model="resultText"
               rows="12"
               placeholder="Готовый перевод появится здесь..."
-              class="w-full result-textarea"
-              :class="{ 'result-filled': !!resultText }"
+              class="w-full"
               readonly
             />
+            <!-- Metadata: show only when result exists -->
+            <div v-if="resultText && meta" class="result-meta">
+              <span class="meta-item">
+                <i class="pi pi-server mr-1"></i>
+                {{ meta.model }}
+              </span>
+              <span class="meta-item">
+                <i class="pi pi-calculator mr-1"></i>
+                {{ meta.tokens }} токенов
+              </span>
+              <span class="meta-item">
+                <i class="pi pi-dollar mr-1"></i>
+                {{ formatCost(meta.cost) }} $
+              </span>
+            </div>
           </div>
         </div>
 
@@ -123,7 +137,8 @@ import { ref, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useClientsStore } from '@/stores/clients';
 import type { Client } from '@/types/client';
-import type { TranslateRequest } from '@/types/translation';
+import type { TranslateRequest, TranslateResponse } from '@/types/translation';
+import { formatCost } from '@/utils/formatters';
 
 interface Props {
   isLoading: boolean;
@@ -135,6 +150,7 @@ interface Props {
     result_text: string;
     translation_pair: string;
   }>;
+  meta?: TranslateResponse | null;
 }
 
 const props = defineProps<Props>();
@@ -267,20 +283,25 @@ defineExpose({ resultText });
   color: var(--text-color-secondary);
 }
 
-.source-textarea,
-.result-textarea {
+.source-textarea {
   width: 100%;
   font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.6;
 }
 
-.result-textarea {
-  background-color: var(--surface-ground) !important;
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
 }
 
-.result-textarea.result-filled {
-  border-left: 3px solid #3b82f6;
+.meta-item {
+  display: flex;
+  align-items: center;
 }
 
 .direction-display {

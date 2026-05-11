@@ -2,37 +2,14 @@
   <div class="translate-view">
     <PageTitle title="Сделать перевод" />
 
-    <div class="translate-grid">
-      <!-- Left column: form with source + result side by side -->
-      <div class="translate-form-col">
-        <TranslateForm
-          ref="formRef"
-          :is-loading="translationsStore.isLoading"
-          :clear-form="clearForm"
-          :initial-data="formData"
-          @translate="handleTranslate"
-        />
-      </div>
-
-      <!-- Right column: metadata & re-translate -->
-      <div class="translate-result-col">
-        <Transition name="fade" mode="out-in">
-          <TranslationResultCard
-            v-if="translationsStore.currentResult"
-            key="result"
-            :translate-result="translationsStore.currentResult"
-          />
-          <Card v-else key="empty" class="result-placeholder">
-            <template #content>
-              <div class="placeholder-body">
-                <i class="pi pi-language placeholder-icon"></i>
-                <p class="placeholder-text">Результат перевода появится справа от исходного текста</p>
-              </div>
-            </template>
-          </Card>
-        </Transition>
-      </div>
-    </div>
+    <TranslateForm
+      ref="formRef"
+      :is-loading="translationsStore.isLoading"
+      :clear-form="clearForm"
+      :initial-data="formData"
+      :meta="translationsStore.currentResult"
+      @translate="handleTranslate"
+    />
 
     <!-- Processing dialog -->
     <Dialog
@@ -92,9 +69,7 @@ import { translateService } from '@/services/api/translate.service';
 import type { TranslateRequest, TranslationHistoryItem } from '@/types/translation';
 import PageTitle from '@/components/common/PageTitle.vue';
 import TranslateForm from '@/components/translate/TranslateForm.vue';
-import TranslationResultCard from '@/components/translate/TranslationResultCard.vue'
-import ErrorState from '@/components/common/ErrorState.vue';
-import Card from 'primevue/card';
+
 import Dialog from 'primevue/dialog';
 
 const translationsStore = useTranslationsStore();
@@ -153,9 +128,7 @@ const onClearConfirm = () => {
   translationsStore.currentResult = null;
 };
 
-const retryLastOperation = () => {
-  translationsStore.error = null;
-};
+
 
 const fillFromHistory = async (historyId: string) => {
   try {
@@ -274,73 +247,9 @@ onMounted(async () => {
   width: 100%;
 }
 
-.translate-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.5rem;
-  align-items: start;
+.translate-view {
+  margin: 0 auto;
   width: 100%;
-}
-
-.translate-form-col {
-  min-width: 0;
-}
-
-.translate-result-col {
-  position: sticky;
-  top: 1.5rem;
-  min-width: 0;
-}
-
-.result-placeholder :deep(.p-card-body) {
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.result-placeholder :deep(.p-card-content) {
-  padding: 0;
-}
-
-.placeholder-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding: 2rem;
-  text-align: center;
-}
-
-.placeholder-icon {
-  font-size: 3rem;
-  color: var(--text-color-secondary);
-  opacity: 0.4;
-}
-
-.placeholder-text {
-  color: var(--text-color-secondary);
-  font-size: 0.95rem;
-  margin: 0;
-}
-
-/* Fade transition */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* Mobile: single column */
-@media (max-width: 1024px) {
-  .translate-grid {
-    grid-template-columns: 1fr;
-  }
-  .translate-result-col {
-    position: static;
-  }
+  max-width: 1400px;
 }
 </style>
