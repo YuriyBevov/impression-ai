@@ -13,10 +13,16 @@ export const useTranslationsStore = defineStore('translations', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const result = await translateService.translate(request);
+      // 1. Start translation — get ID immediately
+      const id = await translateService.startTranslation(request);
+
+      // 2. Poll until n8n finishes
+      const result = await translateService.pollUntilDone(id);
+
       currentResult.value = result;
-      const [sourceLang, targetLang] = request.translation_pair.split('-') as [TranslateRequest['source_lang'], TranslateRequest['target_lang']];
+
       // Add to history
+      const [sourceLang, targetLang] = request.translation_pair.split('-') as [string, string];
       history.value.unshift({
         ...result,
         source_text: request.source_text,
@@ -27,6 +33,7 @@ export const useTranslationsStore = defineStore('translations', () => {
         date: new Date().toISOString(),
         id: Date.now().toString()
       });
+
       return result;
     } catch (err: any) {
       error.value = err.message || 'Ошибка перевода';

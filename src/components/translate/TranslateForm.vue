@@ -106,6 +106,7 @@ import type { TranslateRequest } from '@/types/translation';
 
 interface Props {
   isLoading: boolean;
+  clearForm?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -142,7 +143,7 @@ const translate = () => {
     return;
   }
 
-  const client = activeClients.value.find(c => c.id === selectedClient.value) as Client | undefined;
+  const client = activeClients.find((c: Client) => c.id === selectedClient.value) as Client | undefined;
 
   emit('translate', {
     client_id: selectedClient.value,
@@ -154,6 +155,15 @@ const translate = () => {
 
 watch(() => props.isLoading, (newLoading, oldLoading) => {
   if (oldLoading && !newLoading) {
+    submitted.value = false;
+  }
+});
+
+watch(() => props.clearForm, (val) => {
+  if (val) {
+    sourceText.value = '';
+    selectedFile.value = null;
+    selectedClient.value = null;
     submitted.value = false;
   }
 });

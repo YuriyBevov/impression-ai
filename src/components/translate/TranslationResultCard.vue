@@ -58,7 +58,7 @@ defineProps<Props>();
 
 .section-label {
   font-weight: bold;
-  color: #495057;
+  color: var(--text-color);
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -67,7 +67,7 @@ defineProps<Props>();
 
 .original-text {
   font-style: italic;
-  color: #6c757d;
+  color: var(--text-color-secondary);
   margin-bottom: 0.5rem;
 }
 
@@ -78,8 +78,10 @@ defineProps<Props>();
 
 .translation-text {
   padding: 1rem;
-  background-color: #f8fafc;
+  background-color: var(--surface-ground);
+  color: var(--text-color);
   border-radius: 4px;
+  border: 1px solid var(--p-textarea-border-color);
   border-left: 2px solid #3b82f6;
   line-height: 1.6;
   white-space: pre-line;
@@ -96,7 +98,7 @@ defineProps<Props>();
   display: flex;
   align-items: center;
   font-size: 0.9rem;
-  color: #6c757d;
+  color: var(--text-color-secondary);
 }
 
 @media (max-width: 768px) {
